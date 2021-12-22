@@ -1,0 +1,47 @@
+{
+    "session":{
+        "pseudo":{
+            "Att":{
+                "-1":"You need to attempt more questions!",
+                "0":"You attempted an average amount of questions.",
+                "1":"Good job! You attempted more questions as compared to the other students attempting the same session."
+            },
+            "Acc":{
+                "-1":"Your accuracy is {userAcc} percentage. The global acc is {pseudoAcc}. You need to improve your accuracy to keep up with the class.",
+                "0":"Your accuracy is {userAcc} percentage. The global acc is {pseudoAcc}. Your accuracy is close to the class avg.",
+                "1":"Your accuracy is {userAcc} percentage. The global acc is {pseudoAcc}. Your are doing better tha the class."
+            },
+            "Time":{
+                "-1":"",
+                "0":"",
+                "1":""
+            },
+            "KSC":{
+                "-1":"",
+                "0":"",
+                "1":""
+            }, 
+            "Soln":{
+                "-1":"",
+                "0":"",
+                "1":""
+            },
+            "Att2":{
+                "-1":"",
+                "0":"",
+                "1":""
+            },
+            "Acc2":{
+                "-1":"",
+                "0":"",
+                "1":""
+            },
+            "Revw":{
+                "-1":"",
+                "0":"",
+                "1":""
+            }
+        }
+    }
+    
+}

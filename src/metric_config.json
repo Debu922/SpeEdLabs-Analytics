@@ -1,0 +1,14 @@
+{
+    "globalTopicMetrics":{
+        "minQuestions":5,
+        "minTime":300
+    },
+    "globalChapterMetrics":{
+        "minQuestions":5,
+        "minTime":300
+    },
+    "globalSubjectMetrics":{
+        "minQuestions":5,
+        "minTime":300
+    }
+}

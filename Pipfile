@@ -8,6 +8,7 @@ pyodbc = "*"
 matplotlib = "*"
 pandas = "*"
 numpy = "*"
+jinja2 = "*"
 
 [dev-packages]
 ipykernel = "*"
