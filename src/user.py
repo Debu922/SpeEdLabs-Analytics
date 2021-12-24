@@ -1,5 +1,6 @@
 from chapter import Chapter
 from session import Session
+from subject import Subject
 import pandas as pd
 from db_util import DBConnection
 import numpy as np
@@ -8,11 +9,22 @@ import sys
 from util import *
 
 class User():
-    def __init__(self, userId, cnxn, config, instituteId):
+    def __init__(self, userId, cnxn, config, instituteId = 0):
+        """Basic user class that holds details about the users and his sessions.
+
+        Args:
+            userId (int): userId
+            cnxn (Connection): SQL connection to the DB
+            config (Dict): Config file for user
+            instituteId (int): Institute Id (Default = 0)
+        """
+
+        # Basic Data
         self.userId = userId
         self.instituteId = userId
+
         # Session Metrics
-        self.sessionData = pd.DataFrame() # UID, Date, ChapterId, SubjectId
+        self.sessionData = pd.DataFrame()
         self.sessions = pd.Series(dtype=object)
         
         # Chapter Metrics
@@ -23,10 +35,6 @@ class User():
         self.subjectData = pd.DataFrame()
         self.subjects = pd.Series(dtype = object)
 
-        # Topic Metrics
-        self.topicData = pd.DataFrame()
-        self.subjects = pd.Series(dtype = object)
-        
         # SQL Connection
         self.cnxn = cnxn
 
@@ -39,41 +47,19 @@ class User():
         self.userId = userId
         self.ZScoresType = [
             "userSession vs pseudoSession",
-            "userSession vs userTopic",
-            "userSession vs userChapter",
             "userSession vs userSubject",
-            "userSession vs globalTopic",
-            "userSession vs globalChapter",
             "userSession vs globalSubject"
         ]
         return
 
-    def get_Zscore(self,sessionId, type:str, uM:pd.DataFrame, gM:pd.DataFrame):
-        
-        # Throw error if incorrect Z Score type
-        if type not in self.ZScoresType:
-            print("please input correct user type")
-            sys.exit(-1)
-
-        # Check if Z Score exists already
-        try:
-            (sessionId, type) in self.ZScores.index
-        except:
-            pass
-        for label in gM.columns:
-            self.ZScores.loc[(sessionId, type),label] = z_score(uM.loc[label],gM.loc["Avg",label],gM.loc["Std",label])
-        return
-      
     def get_sessions(self, top = 20, sessionIds = None) -> None:
         """Fetch latest session data from database
 
         Args:
             top (int, optional): [description]. Defaults to 20.
-        """
-        sessionConfig = self.config["session"]
-        
+        """        
         # sessionFromIDs
-        if sessionIds != None:
+        if type(sessionIds) == pd.DataFrame:
             data = self.get_sessions_from_IDs(sessionIds)
         else:
             data = self.get_top_sessions(top)
@@ -152,20 +138,25 @@ class User():
         # Generate metrics for each session
         for sessionId in sessionIds:
             self.sessions.loc[sessionId].gen_metrics(self.cnxn)
-
         return
     
     def get_chapters(self, chapterIds) -> None:
 
-        # Check type of chapterId
-        if type(chapterIds) == int:
-            chapterIds = [chapterIds]
 
-        
-        if len(chapterIds) == 1:
-            topicIDstr = "= {}".format(str(chapterIds[0]))
+        return
+
+    def gen_chapter_metrics(self) -> None:
+        return
+
+    def get_subjects(self, subjectIds) -> None:
+        # Check type of chapterId
+        if type(subjectIds) == int:
+            subjectIds = [subjectIds]
+
+        if len(subjectIds) == 1:
+            subjectIdStr = "= {}".format(str(subjectIds[0]))
         else:
-            topicIDstr = "IN ({})".format(", ".join([str(x) for x in chapterIds])) 
+            subjectIdStr = "IN ({})".format(", ".join([str(x) for x in subjectIds])) 
         
         query = """
         SELECT
@@ -183,26 +174,31 @@ class User():
             [UserId] = {_userId} AND
             [_TotalQuestions] >= {_minQuestions} AND
             [_TotalTimeTaken] >= {_minTime} AND
-            [TopicId] {_topicId}
-        """.format(_userId = self.userId, _minQuestions = self.config["session"]["minQuestions"], _minTime = self.config["session"]["minTime"],_topicId = topicIDstr)
-        chapterData = pd.read_sql(query,self.cnxn)
+            [SubjectId] {_subjectId}
+        """.format(_userId = self.userId, _minQuestions = self.config["session"]["minQuestions"], _minTime = self.config["session"]["minTime"],_subjectId = subjectIdStr)
+        data = pd.read_sql(query,self.cnxn).set_index("UserTestSessionId")
         
-        for chapterId in chapterIds:
-            if chapterId not in self.chapters.index:
-                self.chapters[chapterId] = Chapter("user", chapterId)
+        for subjectId in subjectIds:
+            if subjectId not in self.subjects.index:
+                self.subjects.loc[subjectId] = Subject(self.userId, "user", subjectId,self.cnxn)
+            tempData = data[data["SubjectId"] == subjectId]
+            self.subjectData[subjectId, "NoOfSessions"] = tempData.shape[0]
+            self.subjectData[subjectId, "TotalNoOfQuestions"] = np.sum(tempData["_TotalQuestions"])
+            self.subjectData[subjectId, "TotalTime"] = np.sum(tempData["_TotalQuestions"])
+
+            self.sessionData = self.sessionData.combine_first(data)
+            # Generate session objects
+            for sessionId in self.sessionData.index:
+                if sessionId in self.sessions.index:
+                    continue
+                self.sessions.loc[sessionId] = Session(self,"user",sessionId, None)
+                self.subjects.loc[subjectId].sessions.loc[sessionId] = self.sessions.loc[sessionId]
 
         return
 
-    def gen_chapter_metrics(self) -> None:
-        return
-
-    def get_subjects(self) -> None:
-        return
-
-    def get_subjects(self, subjectIds) -> None:
-        return
-
-    def gen_subject_metrics(self) -> None:
+    def gen_subject_metrics(self, subjectId) -> None:
+        self.get_subjects(subjectId)
+        self.subjects.loc[subjectId].get_subject_metrics(None)
         return
 
     def display_metrics(self, sessionId, pseudo = False, gTopic=False):
@@ -264,3 +260,56 @@ class User():
                 sessionZScore.loc["User vs Pseudo",flag] = self.z_score(uM.loc[flag],pM.loc["Avg",flag],pM.loc["Std",flag])
             print(sessionZScore)
         return sessionZScore
+
+    def gen_user_session_history(self, sessionId, historyLength):
+        query = """
+        SELECT TOP ({_historyLength})
+            [UserTestSessionId]
+        FROM
+            [speedlabs-anon].[dbo].[UserTestSession]
+        WHERE
+            [UserId] = {_userId} AND
+            [EndedOn] < (
+                SELECT
+                    [StartedOn]
+                FROM
+                    [speedlabs-anon].[dbo].[UserTestSession]
+                WHERE
+                    [UserTestSessionId] = {_sessionId}
+            ) AND
+            [_TotalQuestions] >= {_minQuestions} AND
+            [_TotalTimeTaken] >= {_minTime}
+        ORDER BY
+            [EndedOn] DESC
+        """.format(_historyLength = historyLength, _userId = self.userId, _sessionId = sessionId, _minQuestions = self.config["session"]["minQuestions"], _minTime = self.config["session"]["minTime"])
+        sessionIds = list(pd.read_sql(query, self.cnxn)["UserTestSessionId"])
+        self.gen_session_metrics(sessionIds)
+        if self.config["debug"]:
+            print("Finished Generating Session Wise Metrics")
+        self.sessionHistoryMetrics = pd.Series(dtype=object)
+        self.sessionHistoryMetrics.loc[sessionId] = self.gen_user_session_history_metrics(sessionIds)
+
+        return 
+        
+    def gen_user_session_history_metrics(self, sessionIds):
+        columns = ["NoQ", "Att", "Acc", "STim", "ATim", "KSC","Soln", "Att2", "Acc2", "Revw"]
+        sessionMetricsData = pd.DataFrame(columns=columns)
+        for sessionId in sessionIds:
+            session = self.sessions[sessionId]
+            sessionMetricsData.loc[session.userSessionId] = session.metrics
+
+        userSessionHistory = pd.DataFrame()
+        sD = sessionMetricsData
+        userSessionHistory.loc["Avg", "Total Sessions"] = sD.shape[0]
+        userSessionHistory.loc["Avg", "NoQ" ], userSessionHistory.loc["Std", "NoQ" ] = (np.mean(sD["NoQ"]), np.std(sD["NoQ"]))
+        userSessionHistory.loc["Avg", "Att" ], userSessionHistory.loc["Std", "Att" ] = weighted_avg_and_std(sD["Att"],sD["NoQ"])
+        userSessionHistory.loc["Avg", "Acc" ], userSessionHistory.loc["Std", "Acc" ] = weighted_avg_and_std(sD["Acc"] ,sD["NoQ"])
+        userSessionHistory.loc["Avg", "ATim"], userSessionHistory.loc["Std", "ATim"] = weighted_avg_and_std(sD["ATim"],sD["NoQ"])
+        userSessionHistory.loc["Avg", "STim"], userSessionHistory.loc["Std", "STim"] = (np.mean(sD["STim"]) , np.std(sD["STim"]))
+        userSessionHistory.loc["Avg", "KSC" ], userSessionHistory.loc["Std", "KSC" ] = weighted_avg_and_std(sD["KSC" ],sD["NoQ"])
+        userSessionHistory.loc["Avg", "Soln"], userSessionHistory.loc["Std", "Soln"] = weighted_avg_and_std(sD["Soln"],sD["NoQ"])
+        userSessionHistory.loc["Avg", "Att2"], userSessionHistory.loc["Std", "Att2"] = weighted_avg_and_std(sD["Att2"],sD["NoQ"])
+        userSessionHistory.loc["Avg", "Acc2"], userSessionHistory.loc["Std", "Acc2"] = weighted_avg_and_std(sD["Acc2"],sD["NoQ"])
+        userSessionHistory.loc["Avg", "Revw"], userSessionHistory.loc["Std", "Revw"] = weighted_avg_and_std(sD["Revw"],sD["NoQ"])
+
+        return userSessionHistory

@@ -1,0 +1,114 @@
+{
+    "sessionQuality":{
+        "Acc":{
+            "Session vs Pseudo Session":{
+                "0":{
+                    "z-range":[-100,-0.5],
+                    "modifier":1,  
+                    "text":"Your accuracy is {_userAccuracy} where as the global accuracy is {_globalAccuracy}. You need to improve your accuracy to keep up with the class."          
+                },
+                "1":{
+                    "z-range":[-0.5,0.5],
+                    "modifier":1,
+                    "text":"Your accuracy is {_userAccuracy} where as the global accuracy is {_globalAccuracy}. You are performing close to the average of the class."
+                },
+                "2":{
+                    "z-range":[0.5,100],
+                    "modifier":1,
+                    "text":"Your accuracy is {_userAccuracy} where as the global accuracy is {_globalAccuracy}. Your accuracy is better than majority of the students in the class."
+                }
+            },
+            "Session vs Subject History":{
+                "0":{
+                    "z-range":[-100,-0.5],
+                    "modifier":1,  
+                    "text":"Your accuracy is {_userAccuracy} where as your typical accuracy in this subject is {_userSubjectAccuracy}. Your accuracy has dropped form your average during this session."          
+                },
+                "1":{
+                    "z-range":[-0.5,0.5],
+                    "modifier":1,
+                    "text":"Your accuracy is {_userAccuracy} where as your typical accuracy in this subject is {_userSubjectAccuracy}."
+                },
+                "2":{
+                    "z-range":[0.5,100],
+                    "modifier":1,
+                    "text":"Your accuracy is {_userAccuracy} where as your typical accuracy in this subject is {_userSubjectAccuracy}. Your accuracy is better this session compared to your typical accuracy in the subject."
+                }
+            },
+            "Session vs Session History":{
+                "0":{
+                    "z-range":[-100,-0.5],
+                    "modifier":1,  
+                    "text":"Your accuracy is {_userAccuracy} where as your typical accuracy in recent sessions is{_userSessionAccuracy}. Your accuracy for this session has dropped significantly."          
+                },
+                "1":{
+                    "z-range":[-0.5,0.5],
+                    "modifier":1,
+                    "text":"Your accuracy is {_userAccuracy} where as your typical accuracy in recent sessions is{_userSessionAccuracy}."
+                },
+                "2":{
+                    "z-range":[0.5,100],
+                    "modifier":1,
+                    "text":"Your accuracy is {_userAccuracy} where as your typical accuracy in recent sessions is{_userSessionAccuracy}. Your accuracy for this session was better than your recent average."
+                }
+            }
+        },
+        "STim":
+        {
+            "Session vs Pseudo Session":{
+                "0":{
+                    "z-range":[-100,-0.5],
+                    "modifier":0.7,  
+                    "text":"You took {_userTime} to finish the session whereas the global average time is {_globalTime}. You are solving your sessions faster than most other students."          
+                },
+                "1":{
+                    "z-range":[-0.5,0.5],
+                    "modifier":0.7,
+                    "text":"You took {_userTime} to finish the session whereas the global average time is {_globalTime}."
+                },
+                "2":{
+                    "z-range":[0.5,100],
+                    "modifier":0.7,
+                    "text":"You took {_userTime} to finish the session whereas the global average time is {_globalTime}. You are solving your sessions slower than most other students."
+                }
+            },
+            "Session vs Subject History":{
+                "0":{
+                    "z-range":[-100,-0.5],
+                    "modifier":1,  
+                    "text":"You took {_userTime} to finish the session whereas you typically take {_userSubjectTime} to solve each question from this subject. You took significantly less time for this sessions."          
+                },
+                "1":{
+                    "z-range":[-0.5,0.5],
+                    "modifier":1,
+                    "text":"You took {_userTime} to finish the session whereas you typically take {_userSubjectTime} to solve each question from this subject. "
+                },
+                "2":{
+                    "z-range":[0.5,100],
+                    "modifier":1,
+                    "text":"You took {_userTime} to finish the session whereas you typically take {_userSubjectTime} to solve each question from this subject. You took significantly longer for this sessions."
+                }
+            },
+            "Session vs Session History":{
+                "0":{
+                    "z-range":[-100,-0.5],
+                    "modifier":1,  
+                    "text":"You took {_userTime} to finish the session whereas you have typically taken {_userSessionTime} to solve each question from this subject. You took less time per question than in other sessions."          
+                },
+                "1":{
+                    "z-range":[-0.5,0.5],
+                    "modifier":1,
+                    "text":"You took {_userTime} to finish the session whereas you have typically taken {_userSessionTime} to solve each question from this subject."
+                },
+                "2":{
+                    "z-range":[0.5,100],
+                    "modifier":1,
+                    "text":"You took {_userTime} to finish the session whereas you have typically taken {_userSessionTime} to solve each question from this subject."
+                }
+            }
+        }
+    },
+    "sessionQuantity":{
+
+    }
+}

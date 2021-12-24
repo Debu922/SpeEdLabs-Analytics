@@ -209,15 +209,6 @@ def get_session_metrics(userTestSessionId, connection):
 
     return sessionMetrics
 
-def weighted_avg_and_std(values, weights):
-    """
-    Return the weighted average and standard deviation.
-
-    values, weights -- Numpy ndarrays with the same shape.
-    """
-    average = np.average(values, weights=weights)
-    variance = np.average((values-average)**2, weights=weights)
-    return np.array([average, np.sqrt(variance)])
 
 
 def get_pseudo_session_metrics(userTestSessionId, dateOnwards, connection):

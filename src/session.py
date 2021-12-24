@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from db_util import weighted_avg_and_std
+from util import *
 
 class Session():
 
@@ -137,7 +137,7 @@ class Session():
         uM.loc["NoQ"] = qD.shape[0]
         uM.loc["Att"] = 100.0* np.sum(qD["Att"]) / qD.shape[0]
         uM.loc["Acc"] = 100.0* np.sum(qD["Acc"]) / qD.shape[0]
-        uM.loc["TTim"] = np.sum(qD["Time"])
+        uM.loc["STim"] = np.sum(qD["Time"])
         uM.loc["ATim"] = np.mean(qD["Time"])
         uM.loc["KSC"] = 100.0* np.sum(qD["KSC"]) / qD.shape[0]
         uM.loc["Soln"] = 100.0* np.sum(qD["Soln"]) / qD.shape[0]
@@ -155,7 +155,7 @@ class Session():
         return (average, np.sqrt(variance))
 
     def gen_pseudo_metrics(self):
-        columns = ["NoQ", "Att", "Acc", "TTim", "ATim", "KSC","Soln", "Att2", "Acc2", "Revw"]
+        columns = ["NoQ", "Att", "Acc", "STim", "ATim", "KSC","Soln", "Att2", "Acc2", "Revw"]
         index = ["Avg","Std"]
         
         pM = pd.DataFrame(columns =columns ,index = index)
@@ -170,8 +170,8 @@ class Session():
         pM.loc[ "Avg","Acc2"], pM.loc[ "Std","Acc2"] = weighted_avg_and_std(qD["Acc2"], qD["App"])
         pM.loc[ "Avg","Revw"], pM.loc[ "Std","Revw"] = weighted_avg_and_std(qD["Revw"], qD["App"])
         pM.loc[ "Avg","ATim"], pM.loc[ "Std","ATim"] = weighted_avg_and_std(qD["Time"], qD["App"])
-        pM.loc[ "Avg","TTim"] = np.sum(qD["Time"])
-        pM.loc[ "Std","TTim"] = np.sqrt(np.sum(qD["StdT"]**2))
+        pM.loc[ "Avg","STim"] = np.sum(qD["Time"])
+        pM.loc[ "Std","STim"] = np.sqrt(np.sum(qD["StdT"]**2))
         self.metrics = pM
          
         return

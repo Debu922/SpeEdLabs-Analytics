@@ -1,11 +1,13 @@
 import pandas as pd
+import numpy as np
 from session import Session
+from subject import Subject
 
 class Institute():
     def __init__(self, instituteId, cnxn, config) -> None:
 
         self.instituteId = instituteId
-        
+
         # Session Metrics
         self.sessionData = pd.DataFrame() # UID, Date, ChapterId, SubjectId
         self.sessions = pd.Series(dtype = object)
@@ -84,10 +86,56 @@ class Institute():
 
         return
     
-    def get_subjects(self, chapterIds) -> None:
+    def get_subjects(self, subjectIds) -> None:
+        # Check type of chapterId
+        if type(subjectIds) == int:
+            subjectIds = [subjectIds]
 
+        if len(subjectIds) == 1:
+            subjectIdStr = "= {}".format(str(subjectIds[0]))
+        else:
+            subjectIdStr = "IN ({})".format(", ".join([str(x) for x in subjectIds])) 
+        
+        query = """
+        SELECT
+            [UserTestSessionId]
+            ,[UserId]
+            ,[CourseId]
+            ,[SubjectId]
+            ,[EndedOn]
+            ,[_TotalQuestions]
+            ,[_TotalAttempted]
+            ,[_TotalCorrect]
+            ,[_TotalTimeTaken]
+        FROM 
+            [speedlabs-anon].[dbo].[UserTestSession]
+        WHERE 
+            [_TotalQuestions] >= {_minQuestions} AND
+            [_TotalTimeTaken] >= {_minTime} AND
+            [SubjectId] {_subjectId} AND
+            [EndedOn] > CONVERT(datetime, '{_EndedOn}')
+        """.format( _minQuestions = self.config["session"]["minQuestions"], _minTime = self.config["session"]["minTime"],_subjectId = subjectIdStr, _EndedOn = self.config["session"]["dateOnwards"])
+        data = pd.read_sql(query,self.cnxn).set_index("UserTestSessionId")
+        self.subjectData = pd.DataFrame()
+        for subjectId in subjectIds:
+            if subjectId not in self.subjects.index:
+                self.subjects.loc[subjectId] = Subject(None, "institute", subjectId,self.cnxn)
+            tempData = data[data["SubjectId"] == subjectId]
+            self.subjectData[subjectId, "NoOfSessions"] = tempData.shape[0]
+            self.subjectData[subjectId, "TotalNoOfQuestions"] = np.sum(tempData["_TotalQuestions"])
+            self.subjectData[subjectId, "TotalTime"] = np.sum(tempData["_TotalQuestions"])
+
+            self.sessionData = self.sessionData.combine_first(data)
+            # Generate session objects
+            for sessionId in self.sessionData.index:
+                if sessionId in self.sessions.index:
+                    continue
+                self.sessions.loc[sessionId] = Session(self,"user",sessionId, None)
+                self.subjects.loc[subjectId].sessions.loc[sessionId] = self.sessions.loc[sessionId]
+        print(self.subjectData)
         return
 
-    def gen_subject_metrics(self) -> None:
-
+    def gen_subject_metrics(self,subjectId) -> None:
+        self.get_subjects(subjectId)
+        self.subjects.loc[subjectId].get_subject_metrics(self.subjectData)
         return
