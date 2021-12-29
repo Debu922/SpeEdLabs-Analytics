@@ -105,15 +105,25 @@ class FeedbackEngine():
         """
         # Generate User Class
         userId = self.get_userId_from_sessionId(sessionId)
-        user = self.users.loc[userId] = User(userId, self.cnxn, self.config)
-        if self.config["debug"]:
-            print("User Class Generated")
+        if userId in self.users.index:
+            user = self.users[userId]
+            if self.config["debug"]:
+                print("User Class Already exists, fetching existing user data")
+        else:
+            user = self.users.loc[userId] = User(userId, self.cnxn, self.config)
+            if self.config["debug"]:
+                print("User Class Generated")
 
         # Generate Institute Class
         instiuteId = 0
-        instiute = self.institutes.loc[instiuteId] = Institute(instiuteId, self.cnxn, self.config)
-        if self.config["debug"]:
-            print("Institute Class Generated")
+        if instiuteId in self.institutes.index:
+            instiute = self.institutes[instiuteId]
+            if self.config["debug"]:
+                print("Institute Class already exists, fetching existing institute data")
+        else:
+            instiute = self.institutes.loc[instiuteId] = Institute(instiuteId, self.cnxn, self.config)
+            if self.config["debug"]:
+                print("Institute Class Generated")
 
         # Generate User Session Metrics
         user.gen_session_metrics(sessionId)
@@ -162,9 +172,107 @@ class FeedbackEngine():
             print("SessionZScore calculated")      
         return sessionZScore
 
-    
+    def get_session_quantity_feedback_list(self, sessionId):
+        zScores = self.get_SQuanR_ZScores(sessionId)
+        sqrConfig:Dict
+        sqrConfig = self.PSConfig["sessionQuantity"]
 
-    def gen_session_quantity_report(self,):
+        # Get metrics to be evaluated from config.
+        metricEvaluated = sqrConfig.keys()
+
+        # Make dataframe to store feedback report
+        feedbackListColums = ["metric", "type", "id", "score", "text"]
+        feedbackList = pd.DataFrame(columns=feedbackListColums)
+
+        # Iterate through Z-Scores and 
+        for metric in metricEvaluated:
+            for tableName in sqrConfig[metric].keys():
+                # Get ZScore to be compared
+                zScore = zScores.loc[tableName,metric]
+
+                # Iterate through option ids.
+                for id in sqrConfig[metric][tableName].keys(): 
+
+                    # Compare if within bound and update FeedbackList
+                    if sqrConfig[metric][tableName][id]["z-range"][0] < zScore and zScore <= sqrConfig[metric][tableName][id]["z-range"][1]:
+                        df = pd.DataFrame({"metric":[metric],
+                                           "type":[tableName],
+                                           "id":[id],
+                                           "score":[zScore*sqrConfig[metric][tableName][id]["modifier"]],
+                                           "text":[sqrConfig[metric][tableName][id]["text"]]})
+                        feedbackList = feedbackList.append(df, ignore_index=True)
+                        break
+        if self.config["debug"]:
+            print("Feedback List Generated successfully.")
+        return feedbackList
+
+    def get_SQuanR_ZScores(self, sessionId):
+        """Generate Session Quantity Report Zscores
+
+        Args:
+            sessionId (int): Session ID for which quality report is to be generated
+        Returns:
+            sessionZScore: Zscore for session
+        """
+        # Generate User Class
+        userId = self.get_userId_from_sessionId(sessionId)
+        if userId in self.users.index:
+            user = self.users[userId]
+            if self.config["debug"]:
+                print("User Class Already exists, fetching existing user data")
+        else:
+            user = self.users.loc[userId] = User(userId, self.cnxn, self.config)
+            if self.config["debug"]:
+                print("User Class Generated")
+
+        # Generate Institute Class
+        instiuteId = 0
+        if instiuteId in self.institutes.index:
+            instiute = self.institutes[instiuteId]
+            if self.config["debug"]:
+                print("Institute Class already exists, fetching existing institute data")
+        else:
+            instiute = self.institutes.loc[instiuteId] = Institute(instiuteId, self.cnxn, self.config)
+            if self.config["debug"]:
+                print("Institute Class Generated")
+
+        # Generate User Session Metrics
+        user.gen_session_metrics(sessionId)
+        topicId = int(user.sessionData.loc[sessionId, "TopicId"])
+        if self.config["debug"]:
+            print("User Session Metrics Generated")
+        
+        # Generate Instiute Topic Metrics:
+        instiute.get_topic_metrics(topicId)
+        if self.config["debug"]:
+            print("Institute Topic Metrics Generated")
+
+
+        # Begin Generating metrics
+        flags = ["NoQ", "Att", "Acc", "STim", "ATim", "KSC","Soln", "Att2", "Acc2", "Revw"]
+
+        sessionZScore = pd.DataFrame(columns = flags)
+        
+        # Session vs Topic        
+        uM = user.sessions[sessionId].metrics
+        pM = instiute.topic[topicId].metrics
+        for flag in flags:
+            sessionZScore.loc[("Session vs Global Topic",flag)] = z_score(uM.loc[flag],pM.loc["Avg",flag],pM.loc["Std",flag]) 
+        return sessionZScore
+
+    def gen_session_quantity_report(self, sessionId):
+        userId = self.get_userId_from_sessionId(sessionId)
+        if userId in self.users.index:
+            user = self.users.loc[userId]
+            if self.config["debug"]:
+                print("User Class Exists, fetching existing user.")
+        else:
+            user = self.users.loc[userId] = User(userId, self.cnxn, self.config)
+            if self.config["debug"]:
+                print("User Class Generated")
+
+        
+        
         return
 
     def gen_session_coverage_report(self,):

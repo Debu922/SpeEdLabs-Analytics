@@ -109,6 +109,43 @@
         }
     },
     "sessionQuantity":{
-
+        "NoQ":{
+            "Session vs Global Topic":{
+                "0":{
+                    "z-range":[-100,-0.5],
+                    "modifier":0.7,  
+                    "text":"You attempted {_userAttempt} questions where as the topic average is {_topicAtt}. You need to attempt more questions."          
+                },
+                "1":{
+                    "z-range":[-0.5,0.5],
+                    "modifier":0.7,
+                    "text":"You attempted {_userAttempt} questions where as the topic average is {_topicAtt}."   
+                },
+                "2":{
+                    "z-range":[0.5,100],
+                    "modifier":0.7,
+                    "text":"You attempted a lot of questions. You need to attempt more questions."   
+                }
+            }
+        },
+        "STim":{
+            "Session vs Global Topic":{
+                "0":{
+                    "z-range":[-100,-0.5],
+                    "modifier":0.7,  
+                    "text":"You took much less time than others."          
+                },
+                "1":{
+                    "z-range":[-0.5,0.5],
+                    "modifier":0.7,
+                    "text":"You took average time."   
+                },
+                "2":{
+                    "z-range":[0.5,100],
+                    "modifier":0.7,
+                    "text":"You took a lot of time."   
+                }
+            }
+        }
     }
 }
