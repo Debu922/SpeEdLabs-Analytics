@@ -58,7 +58,7 @@ class FeedbackEngine():
         """
         
         # Get Z Scores of sessions for session quality report.
-        zScores = self.get_SQualR_ZScores(sessionId, historyLength)
+        zScores, uM, pM, sM, uHM = self.get_SQualR_ZScores(sessionId, historyLength)
 
         # Setup config file.
         sqrConfig:Dict
@@ -70,6 +70,53 @@ class FeedbackEngine():
         # Make dataframe to store feedback report
         feedbackListColums = ["metric", "type", "id", "score", "text"]
         feedbackList = pd.DataFrame(columns=feedbackListColums)
+
+        # Get Metric data to put into text.
+        metric_data = {
+            "_userNoQ"  : uM.loc["NoQ" ],
+            "_userAtt"  : uM.loc["Att" ],
+            "_userAcc"  : uM.loc["Acc" ],
+            "_userKSC"  : uM.loc["KSC" ],
+            "_userSoln" : uM.loc["Soln"],
+            "_userAtt2" : uM.loc["Att2"],
+            "_userAcc2" : uM.loc["Acc2"],
+            "_userRevw" : uM.loc["Revw"],
+            "_userATim" : uM.loc["ATim"],
+            "_userSTim" : uM.loc["STim"],
+
+            "_pseudoNoQ"  : pM.loc["Avg", "NoQ" ],
+            "_pseudoAtt"  : pM.loc["Avg", "Att" ],
+            "_pseudoAcc"  : pM.loc["Avg", "Acc" ],
+            "_pseudoKSC"  : pM.loc["Avg", "KSC" ],
+            "_pseudoSoln" : pM.loc["Avg", "Soln"],
+            "_pseudoAtt2" : pM.loc["Avg", "Att2"],
+            "_pseudoAcc2" : pM.loc["Avg", "Acc2"],
+            "_pseudoRevw" : pM.loc["Avg", "Revw"],
+            "_pseudoATim" : pM.loc["Avg", "ATim"],
+            "_pseudoSTim" : pM.loc["Avg", "STim"],
+
+            "_subjectNoQ"  : sM.loc["Avg", "NoQ" ],
+            "_subjectAtt"  : sM.loc["Avg", "Att" ],
+            "_subjectAcc"  : sM.loc["Avg", "Acc" ],
+            "_subjectKSC"  : sM.loc["Avg", "KSC" ],
+            "_subjectSoln" : sM.loc["Avg", "Soln"],
+            "_subjectAtt2" : sM.loc["Avg", "Att2"],
+            "_subjectAcc2" : sM.loc["Avg", "Acc2"],
+            "_subjectRevw" : sM.loc["Avg", "Revw"],
+            "_subjectATim" : sM.loc["Avg", "ATim"],
+            "_subjectSTim" : sM.loc["Avg", "STim"],
+
+            "_historyNoQ"  : uHM.loc["Avg", "NoQ" ],
+            "_historyAtt"  : uHM.loc["Avg", "Att" ],
+            "_historyAcc"  : uHM.loc["Avg", "Acc" ],
+            "_historyKSC"  : uHM.loc["Avg", "KSC" ],
+            "_historySoln" : uHM.loc["Avg", "Soln"],
+            "_historyAtt2" : uHM.loc["Avg", "Att2"],
+            "_historyAcc2" : uHM.loc["Avg", "Acc2"],
+            "_historyRevw" : uHM.loc["Avg", "Revw"],
+            "_historyATim" : uHM.loc["Avg", "ATim"],
+            "_historySTim" : uHM.loc["Avg", "STim"]
+        }
 
         # Iterate through Z-Scores and 
         for metric in metricEvaluated:
@@ -86,7 +133,7 @@ class FeedbackEngine():
                                            "type":[tableName],
                                            "id":[id],
                                            "score":[zScore*sqrConfig[metric][tableName][id]["modifier"]],
-                                           "text":[sqrConfig[metric][tableName][id]["text"]]})
+                                           "text":[sqrConfig[metric][tableName][id]["text"].format(**metric_data)]})
                         feedbackList = feedbackList.append(df, ignore_index=True)
                         break
         if self.config["debug"]:
@@ -170,10 +217,10 @@ class FeedbackEngine():
             sessionZScore.loc[("Session vs Session History",flag)] = z_score(uM.loc[flag],uHM.loc["Avg",flag],uHM.loc["Std",flag])
         if self.config["debug"]:
             print("SessionZScore calculated")      
-        return sessionZScore
+        return sessionZScore, uM, pM, sM, uHM
 
     def get_session_quantity_feedback_list(self, sessionId):
-        zScores = self.get_SQuanR_ZScores(sessionId)
+        zScores, uM, tM = self.get_SQuanR_ZScores(sessionId)
         sqrConfig:Dict
         sqrConfig = self.PSConfig["sessionQuantity"]
 
@@ -183,6 +230,25 @@ class FeedbackEngine():
         # Make dataframe to store feedback report
         feedbackListColums = ["metric", "type", "id", "score", "text"]
         feedbackList = pd.DataFrame(columns=feedbackListColums)
+
+        metric_data = {
+            "_userNoQ"  : uM.loc["NoQ" ],
+            "_userAtt"  : uM.loc["Att" ],
+            "_userAcc"  : uM.loc["Acc" ],
+            "_userKSC"  : uM.loc["KSC" ],
+            "_userSoln" : uM.loc["Soln"],
+            "_userAtt2" : uM.loc["Att2"],
+            "_userAcc2" : uM.loc["Acc2"],
+            "_userRevw" : uM.loc["Revw"],
+            "_userATim" : uM.loc["ATim"],
+            "_userSTim" : uM.loc["STim"],
+
+            "_topicNoS" : tM.loc["Avg","NoS" ],
+            "_topicNoQ" : tM.loc["Avg","NoQ" ],
+            "_topicAtt" : tM.loc["Avg","Att" ],
+            "_topicAcc" : tM.loc["Avg","Acc" ],
+            "_topicSTim": tM.loc["Avg","STim"]
+        }
 
         # Iterate through Z-Scores and 
         for metric in metricEvaluated:
@@ -199,7 +265,7 @@ class FeedbackEngine():
                                            "type":[tableName],
                                            "id":[id],
                                            "score":[zScore*sqrConfig[metric][tableName][id]["modifier"]],
-                                           "text":[sqrConfig[metric][tableName][id]["text"]]})
+                                           "text":[sqrConfig[metric][tableName][id]["text"].format(**metric_data)]})
                         feedbackList = feedbackList.append(df, ignore_index=True)
                         break
         if self.config["debug"]:
@@ -255,10 +321,10 @@ class FeedbackEngine():
         
         # Session vs Topic        
         uM = user.sessions[sessionId].metrics
-        pM = instiute.topic[topicId].metrics
+        tM = instiute.topic[topicId].metrics
         for flag in flags:
-            sessionZScore.loc[("Session vs Global Topic",flag)] = z_score(uM.loc[flag],pM.loc["Avg",flag],pM.loc["Std",flag]) 
-        return sessionZScore
+            sessionZScore.loc[("Session vs Global Topic",flag)] = z_score(uM.loc[flag],tM.loc["Avg",flag],tM.loc["Std",flag]) 
+        return sessionZScore, uM, tM
 
     def gen_session_quantity_report(self, sessionId):
         userId = self.get_userId_from_sessionId(sessionId)

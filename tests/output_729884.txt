@@ -1,0 +1,9 @@
+You took much less time than others.
+You attempted 13 questions where as the topic average is 23.
+ 
+Your accuracy is 38.46 percentage where as your typical accuracy in recent sessions is 70.09 percentage. Your accuracy for this session has dropped significantly.
+Your accuracy is 38.46 percentage where as your typical accuracy in this subject is 64.34 percentage. Your accuracy has dropped form your average during this session.
+Your accuracy is 38.46 percentage where as the global accuracy is 64.05. You need to improve your accuracy to keep up with the class.
+You took 213 seconds to finish the session whereas you have typically taken 522 seconds to solve each question from this subject. You took less time per question than in other sessions.
+You took 213 seconds to finish the session whereas you typically take 511 seconds to solve each question from this subject. You took significantly less time for this sessions.
+You took 213 seconds to finish the session whereas the global average time is 435 seconds. You are solving your sessions faster than most other students.
